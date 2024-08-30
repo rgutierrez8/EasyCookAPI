@@ -13,5 +13,11 @@ namespace EasyCookAPI.Core.Services
 
             return data;
         }
+
+        public void NewStep(Step step) 
+        { 
+            Create(step);
+            Save();
+        }
     }
 }

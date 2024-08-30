@@ -12,5 +12,11 @@ namespace EasyCookAPI.Core.Services
             var data = GetAll().Where(source => source.RecipeId == recipeId).ToList();
             return data;
         }
+
+        public void NewIngredients(Ingredient ing)
+        {
+            Create(ing);
+            Save();
+        }
     }
 }

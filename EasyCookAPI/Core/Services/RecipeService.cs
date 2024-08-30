@@ -23,7 +23,15 @@ namespace EasyCookAPI.Core.Services
             Create(NewRecipe);
             Save();
 
-            return GetByTitle(recipe.Title);
+            var data = GetByTitle(recipe.Title);
+
+            _mapper.MapNewIngredientsDTOToIngredients(recipe.Ingredients, data.Id);
+            data.ListIngredients = recipe.Ingredients;
+
+            _mapper.MapNewStepDTOTOStep(recipe.Steps, data.Id);
+            data.ListSteps = recipe.Steps;
+
+            return data;
         }
         public List<RecipesListDTO> GetAll(int order)
         {

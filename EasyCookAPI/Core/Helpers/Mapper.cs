@@ -21,17 +21,20 @@ namespace EasyCookAPI.Core.Helpers
         #region INGREDIENT IMAPPER
 
         List<IngredientsDTO> MapIngredientsToIngredientsDTO(List<Ingredient> ingredients);
+        void MapNewIngredientsDTOToIngredients(List<IngredientsDTO> ingredients, int recipeId);
 
         #endregion
 
         #region STEP IMAPPER
 
+        void MapNewStepDTOTOStep(List<StepDTO> stepDTO, int recipeId);
         List<StepDTO> MapStepToListStepDTO(List<Step> steps);
 
         #endregion
 
         #region COMMENT IMAPPER
 
+        List<CommentDTO> MapNewCommentDTOToComment(NewCommentDTO newCommentDTO);
         List<CommentDTO> MapCommentsToListCommentDTO(List<Comment> comments);
 
         #endregion
@@ -79,7 +82,6 @@ namespace EasyCookAPI.Core.Helpers
 
 
         #endregion
-
 
         #region RECIPE MAPPER
         public List<RecipesListDTO> MapListRecipeToListRecipeDTO(List<Recipe> recipes)
@@ -174,9 +176,38 @@ namespace EasyCookAPI.Core.Helpers
             return ingredientsDTOs;
         }
 
+        public void MapNewIngredientsDTOToIngredients(List<IngredientsDTO> ingredients, int recipeId)
+        {
+            foreach (IngredientsDTO ingredient in ingredients)
+            {
+                Ingredient ingredient1 = new Ingredient()
+                {
+                    RecipeId = recipeId,
+                    Amount = ingredient.Amount,
+                    IngredientName = ingredient.IngredientName,
+                };
+                _ingredientService.NewIngredients(ingredient1);
+            }
+        }
+
         #endregion
 
         #region STEP MAPPER
+
+        public void MapNewStepDTOTOStep(List<StepDTO> stepDTO, int recipeId)
+        {
+            foreach (StepDTO step in stepDTO)
+            {
+                Step step1 = new Step()
+                {
+                    RecipeId = recipeId,
+                    NumberStep = step.NumberStep,
+                    Describe = step.Describe,
+                };
+
+                _stepService.NewStep(step1);
+            }
+        }
 
         public List<StepDTO> MapStepToListStepDTO(List<Step> steps)
         {
@@ -214,6 +245,22 @@ namespace EasyCookAPI.Core.Helpers
                 ListCommentDTO.Add(commentDTO);
             }
             return ListCommentDTO;
+        }
+
+        public List<CommentDTO> MapNewCommentDTOToComment(NewCommentDTO newCommentDTO)
+        {
+            DateTime dateTime = DateTime.UtcNow.Date;
+            Comment commentDTO = new Comment()
+            {
+                RecipeId = newCommentDTO.RecipeId,
+                UserId = newCommentDTO.UserId, // <-- HARDOCDEADO HASTA TENER EL USUARIO LOGEADO
+                DatePublish = dateTime.ToString("dd/MM/yyyy"),
+                Describe = newCommentDTO.Describe
+            };
+
+            _commentService.NewComment(commentDTO);
+
+            return MapCommentsToListCommentDTO(_commentService.GetComments(newCommentDTO.RecipeId));
         }
 
         #endregion
