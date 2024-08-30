@@ -33,6 +33,18 @@ namespace EasyCookAPI.Core.Services
 
             return data;
         }
+
+        public void DeleteRecipe(int id)
+        {
+            var data = FindByCondition(source => source.Id == id).FirstOrDefault();
+
+            if(data != null && data.UserId == 6) // HARDCODEADO EL USUARIO QUE ELIMINA LA RECETA DEBE SER EL QUE LA CREO (LOGEADO)
+            {
+                Delete(data);
+                Save();
+            }
+        }
+
         public List<RecipesListDTO> GetAll(int order)
         {
             var data = GetAll(source => source.Include(r => r.User)).ToList();

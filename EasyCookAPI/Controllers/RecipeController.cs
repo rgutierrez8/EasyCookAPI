@@ -1,4 +1,5 @@
-﻿using EasyCookAPI.Core.Interfaces;
+﻿using EasyCookAPI.Core.Helpers;
+using EasyCookAPI.Core.Interfaces;
 using EasyCookAPI.Models.DTO;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,10 +10,12 @@ namespace EasyCookAPI.Controllers
     public class RecipeController : Controller
     {
         private readonly IRecipeService _recipeService;
+        private readonly IMapper _mapper;
 
-        public RecipeController(IRecipeService recipeService)
+        public RecipeController(IRecipeService recipeService, IMapper mapper)
         {
             _recipeService = recipeService;
+            _mapper = mapper;
         }
 
         [HttpPost("New")]
@@ -81,12 +84,40 @@ namespace EasyCookAPI.Controllers
             }
         }
 
+        [HttpDelete("Delete")]
+        public IActionResult DeleteRecipe(int id)
+        {
+            try
+            {
+                _recipeService.DeleteRecipe(id);
+                return Ok("La receta se eliminó correctamente");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
         [HttpGet("Favs/{userId}")]
         public IActionResult GetFavs(int userId)
         {
             try
             {
                 return Ok(_recipeService.GetFavsUser(userId));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpDelete("Favs/Delete")]
+        public IActionResult DeleteFav([FromBody] FavDTO fav)
+        {
+            try
+            {
+                _mapper.MapFavDTOToDelete(fav);
+                return Ok("El favorito se eliminó correctamente");
             }
             catch (Exception ex)
             {

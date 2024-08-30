@@ -11,5 +11,6 @@ namespace EasyCookAPI.Core.Interfaces
         public List<RecipesListDTO> GetFavsUser(int userId);
         RecipeDTO newRecipe(NewRecipeDTO recipe);
         RecipeDTO GetByTitle(string title);
+        void DeleteRecipe(int id);
     }
 }

@@ -31,5 +31,22 @@ namespace EasyCookAPI.Core.Services
 
             return data != null ? data.Id : -1;
         }
+
+        public void NewUser(NewUserDTO newUser)
+        {
+            Create(_mapper.MapNewUserToUser(newUser));
+            Save();
+        }
+        public LogedUserDTO? Login(UserLoginDTO loginDTO)
+        {
+            var data = FindByCondition(source => source.Username == loginDTO.Username && source.Pass == loginDTO.Password).FirstOrDefault();
+
+            if (data != null)
+            {
+                return _mapper.MapUserTOLogedUserDTO(data);
+            }
+
+            return null;
+        }
     }
 }

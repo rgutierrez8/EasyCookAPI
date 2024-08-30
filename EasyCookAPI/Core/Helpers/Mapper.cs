@@ -8,6 +8,8 @@ namespace EasyCookAPI.Core.Helpers
     {
         #region USER IMAPPER
         public UserDTO MapUserToUserDTO(User user, List<RecipesListDTO> recipes);
+        LogedUserDTO MapUserTOLogedUserDTO(User user);
+        User MapNewUserToUser(NewUserDTO newUser);
 
         #endregion
 
@@ -42,6 +44,8 @@ namespace EasyCookAPI.Core.Helpers
         #region FAV IMAPPER
 
         List<RecipesListDTO> MapFavToListRecipeDTO(List<Fav> favList);
+        void MapNewFavDTOToFav(FavDTO newFavDTO);
+        void MapFavDTOToDelete(FavDTO favDTO);
 
         #endregion
     }
@@ -80,6 +84,33 @@ namespace EasyCookAPI.Core.Helpers
             return userDTO;
         }
 
+        public LogedUserDTO MapUserTOLogedUserDTO(User user)
+        {
+            LogedUserDTO userDTO = new LogedUserDTO()
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email,
+                Username = user.Username,
+            };
+            return userDTO;
+        }
+
+        public User MapNewUserToUser(NewUserDTO newUser)
+        {
+            User user = new User()
+            {
+                FirstName = newUser.FirstName,
+                LastName = newUser.LastName,
+                Email = newUser.Email,
+                Username = newUser.Username,
+                Pass = newUser.Pass,
+                Banner = newUser.Banner,
+                Pic = newUser.Pic
+            };
+            return user;
+        }
 
         #endregion
 
@@ -277,6 +308,20 @@ namespace EasyCookAPI.Core.Helpers
             }
 
             return recipesListDTOs;
+        }
+        public void MapNewFavDTOToFav(FavDTO newFavDTO)
+        {
+            Fav fav = new Fav()
+            {
+                RecipeId = newFavDTO.RecipeId,
+                UserId = newFavDTO.UserId,
+            };
+
+            _favService.NewFav(fav);
+        }
+        public void MapFavDTOToDelete(FavDTO favDTO)
+        {
+            _favService.DeleteFav(favDTO);
         }
 
         #endregion

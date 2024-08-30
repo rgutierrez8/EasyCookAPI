@@ -1,5 +1,6 @@
 ﻿using EasyCookAPI.Core.Interfaces;
 using EasyCookAPI.Models;
+using EasyCookAPI.Models.DTO;
 
 namespace EasyCookAPI.Core.Services
 {
@@ -18,6 +19,22 @@ namespace EasyCookAPI.Core.Services
             var data = FindByCondition(source => source.RecipeId == recipeId && source.UserId == userId).FirstOrDefault();
 
             return data != null ? true : false;
+        }
+
+        public void NewFav(Fav newFav)
+        {
+            Create(newFav);
+            Save();
+        }
+        public void DeleteFav(FavDTO fav)
+        {
+            var data = FindByCondition(source => source.UserId == fav.UserId && source.RecipeId == fav.RecipeId).FirstOrDefault();
+
+            if (data != null)
+            {
+                Delete(data);
+                Save();
+            }
         }
     }
 }

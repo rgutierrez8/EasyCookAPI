@@ -1,4 +1,5 @@
 ﻿using EasyCookAPI.Core.Interfaces;
+using EasyCookAPI.Models.DTO;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EasyCookAPI.Controllers
@@ -45,6 +46,38 @@ namespace EasyCookAPI.Controllers
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);  
+            }
+        }
+
+        [HttpPost("New")]
+        public IActionResult NewUser(NewUserDTO user)
+        {
+            try
+            {
+                _userService.NewUser(user);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("Login")]
+        public IActionResult Login([FromBody] UserLoginDTO user)
+        {
+            try
+            {
+                var data = _userService.Login(user);
+                if (data != null)
+                {
+                    return Ok(data);
+                }
+                return NotFound("Usuario inexistente");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
             }
         }
     }
