@@ -1,21 +1,25 @@
 ﻿using EasyCookAPI.Core.Helpers;
 using EasyCookAPI.Core.Interfaces;
 using EasyCookAPI.Models.DTO;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EasyCookAPI.Controllers
 {
+    [Authorize]
     [Route("Recipes")]
-    [Controller]
+    [ApiController]
     public class RecipeController : Controller
     {
         private readonly IRecipeService _recipeService;
         private readonly IMapper _mapper;
+        private readonly IHelper _helper;
 
-        public RecipeController(IRecipeService recipeService, IMapper mapper)
+        public RecipeController(IRecipeService recipeService, IMapper mapper, IHelper helper)
         {
             _recipeService = recipeService;
             _mapper = mapper;
+            _helper = helper;
         }
 
         [HttpPost("New")]
@@ -23,11 +27,12 @@ namespace EasyCookAPI.Controllers
         {
             try
             {
-                var exist = _recipeService.GetByTitle(newRecipeDTO.Title);
+                var userId = _helper.DecodeJwt(_helper.GetToken());
+                var exist = _recipeService.GetByTitle(newRecipeDTO.Title, userId);
 
                 if (exist == null)
                 {
-                    return Ok(_recipeService.newRecipe(newRecipeDTO));
+                    return Ok(_recipeService.newRecipe(newRecipeDTO, userId));
                 }
 
                 return BadRequest("Ya existe una receta con es título");
@@ -38,6 +43,7 @@ namespace EasyCookAPI.Controllers
             }
         }
 
+        [AllowAnonymous]
         [HttpGet("All")]
         public IActionResult GetAll([FromQuery] int order = 0)
         {
@@ -56,7 +62,8 @@ namespace EasyCookAPI.Controllers
         {
             try
             {
-                return _recipeService.GetRecipe(Id) != null ? Ok(_recipeService.GetRecipe(Id)) : NotFound();
+                var userId = _helper.DecodeJwt(_helper.GetToken());
+                return _recipeService.GetRecipe(Id, userId) != null ? Ok(_recipeService.GetRecipe(Id, userId)) : NotFound();
             }
             catch (Exception ex)
             {
@@ -69,7 +76,8 @@ namespace EasyCookAPI.Controllers
         {
             try
             {
-                var data = _recipeService.GetByTitle(title);
+                var userId = _helper.DecodeJwt(_helper.GetToken());
+                var data = _recipeService.GetByTitle(title, userId);
 
                 if (data != null)
                 {
@@ -84,13 +92,20 @@ namespace EasyCookAPI.Controllers
             }
         }
 
-        [HttpDelete("Delete")]
+        [HttpDelete("Delete/{id}")]
         public IActionResult DeleteRecipe(int id)
         {
             try
             {
-                _recipeService.DeleteRecipe(id);
-                return Ok("La receta se eliminó correctamente");
+                var userId = _helper.DecodeJwt(_helper.GetToken());
+                var op = _recipeService.DeleteRecipe(id, userId);
+
+                if (op)
+                {
+                    return Ok("La receta se eliminó correctamente");
+                }
+
+                return NotFound("Error al eliminar");
             }
             catch (Exception ex)
             {
@@ -99,11 +114,29 @@ namespace EasyCookAPI.Controllers
         }
 
         [HttpGet("Favs/{userId}")]
-        public IActionResult GetFavs(int userId)
+        public IActionResult GetFavs()
         {
             try
             {
+                var userId = _helper.DecodeJwt(_helper.GetToken());
                 return Ok(_recipeService.GetFavsUser(userId));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("Favs/New")]
+        public IActionResult NewFav([FromBody] FavDTO fav)
+        {
+            try
+            {
+                var userId = _helper.DecodeJwt(_helper.GetToken());
+                fav.UserId = userId;
+                _mapper.MapNewFavDTOToFav(fav);
+
+                return Ok();
             }
             catch (Exception ex)
             {
@@ -116,6 +149,8 @@ namespace EasyCookAPI.Controllers
         {
             try
             {
+                var userId = _helper.DecodeJwt(_helper.GetToken());
+                fav.UserId = userId;
                 _mapper.MapFavDTOToDelete(fav);
                 return Ok("El favorito se eliminó correctamente");
             }

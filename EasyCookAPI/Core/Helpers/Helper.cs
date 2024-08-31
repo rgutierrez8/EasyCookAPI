@@ -1,54 +1,92 @@
 ﻿using EasyCookAPI.Core.Interfaces;
 using EasyCookAPI.Models;
 using EasyCookAPI.Models.DTO;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace EasyCookAPI.Core.Helpers
 {
     public interface IHelper
     {
-        public RecipeDTO GetRecipeDTO(Recipe recipe);
+        string GenerarToken(User user);
+        string GetToken();
+        int DecodeJwt(string token);
+        string EncryptPassSha25(string password);
     }
 
-    public class HelperService : IHelper
+    public class Helper : IHelper
     {
-        private readonly IUserService _userService;
-        private readonly ICommentService _commentService;
-        private readonly IIngredientService _ingredientService;
-        private readonly IStepService _stepService;
-        private readonly IFavService _favService;
-
-        public HelperService(IUserService userService, ICommentService commentService, IIngredientService ingredientService,
-                            IStepService stepService, IFavService favService) 
+        private readonly IConfiguration _configuration;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        public Helper(IConfiguration configuration, IHttpContextAccessor httpContextAccessor) 
         {
-            _userService = userService;
-            _commentService = commentService;
-            _ingredientService = ingredientService;
-            _stepService = stepService;
-            _favService = favService;
+            _configuration = configuration;
+            _httpContextAccessor = httpContextAccessor;
         }
 
-        public RecipeDTO GetRecipeDTO(Recipe recipe)
+        public string GenerarToken(User user)
         {
-            RecipeDTO recipeDTO = new RecipeDTO();
-            //{
-            //    Id = recipe.Id,
-            //    Title = recipe.Title,
-            //    Description = recipe.Describe,
-            //    ListIngredients = _ingredientService.GetIngredients(recipe.Id),
-            //    ListSteps = _stepService.GetSteps(recipe.Id),
-            //    MainImage = recipe.MainImage,
-            //    Img2 = recipe.Img2,
-            //    Img3 = recipe.Img3,
-            //    Img4 = recipe.Img4,
-            //    Time = recipe.NeededTime + " Min",
-            //    //Username = "By " + _userService.GetUser(recipe.UserId).Username,
-            //    Like = recipe.Likes,
-            //    dontLike = recipe.DontLike,
-            //    CommentList = _commentService.GetComments(recipe.Id),
-            //    InFav = _favService.InFavs(recipe.Id, _userService.GetId("winnions"))
-            //};
+            var claims = new[]
+            {
+                new Claim("Id", user.Id.ToString()),
+                new Claim("Username", user.Username),
+                new Claim("Email", user.Email)
+            };
 
-            return recipeDTO;
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("Jwt:Secret_key").Get<string>() ?? string.Empty));
+
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: null,
+                audience: null,
+                claims,
+                expires: DateTime.Now.AddMinutes(60),
+                signingCredentials: credentials
+                );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+        public string GetToken()
+        {
+            var token = _httpContextAccessor.HttpContext.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+            if (token == null)
+            {
+                throw new UnauthorizedAccessException("No se encontró el token.");
+            }
+            return token;
+        }
+        public int DecodeJwt(string token)
+        {
+            var handler = new JwtSecurityTokenHandler();
+            var jsonToken = handler.ReadToken(token) as JwtSecurityToken;
+
+            if(jsonToken != null)
+            {
+                foreach (var data in jsonToken.Claims)
+                {
+                    if (data.Type == "Id")
+                    {
+                        return int.Parse(data.Value);
+                    }
+                }
+            }
+
+            return 0;
+        }
+        public string EncryptPassSha25(string password)
+        {
+            SHA256 sha256 = SHA256Managed.Create();
+            ASCIIEncoding encoding = new ASCIIEncoding();
+            byte[] stream = null;
+            StringBuilder sb = new StringBuilder();
+            stream = sha256.ComputeHash(encoding.GetBytes(password));
+            for (int i = 0; i < stream.Length; i++) sb.AppendFormat("{0:x2}", stream[i]);
+            
+            return sb.ToString();
         }
     }
 }

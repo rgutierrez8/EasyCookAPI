@@ -7,5 +7,6 @@ namespace EasyCookAPI.Core.Interfaces
     {
         public List<Comment> GetComments(int recipeId);
         void NewComment(Comment newComment);
+        bool DeleteComment(DeleteCommentDTO comment);
     }
 }

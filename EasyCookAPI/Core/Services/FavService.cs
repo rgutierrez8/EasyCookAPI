@@ -10,7 +10,7 @@ namespace EasyCookAPI.Core.Services
 
         public List<Fav> GetFavs(int userID)
         {
-            var data = GetAll().Where(source => source.UserId == userID).ToList();
+            var data = GetAll().Where(source => source.UserId == userID).OrderBy(source => source.Id).ToList();
 
             return data;
         }

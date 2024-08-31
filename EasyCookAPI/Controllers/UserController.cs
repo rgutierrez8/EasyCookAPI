@@ -1,10 +1,12 @@
 ﻿using EasyCookAPI.Core.Interfaces;
 using EasyCookAPI.Models.DTO;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EasyCookAPI.Controllers
 {
     [Route("/User")]
+    [ApiController]
     [Controller]
     public class UserController : Controller
     {
@@ -49,6 +51,7 @@ namespace EasyCookAPI.Controllers
             }
         }
 
+        [AllowAnonymous]
         [HttpPost("New")]
         public IActionResult NewUser(NewUserDTO user)
         {
@@ -63,6 +66,7 @@ namespace EasyCookAPI.Controllers
             }
         }
 
+        [AllowAnonymous]
         [HttpPost("Login")]
         public IActionResult Login([FromBody] UserLoginDTO user)
         {
@@ -76,6 +80,21 @@ namespace EasyCookAPI.Controllers
                 return NotFound("Usuario inexistente");
             }
             catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpPost("Update")]
+        public IActionResult UpdatePass([FromBody] UpdateUserPassDTO update)
+        {
+            try
+            {
+                _userService.UpdatePass(update);
+                return Ok("Password actualizado");
+            }
+            catch(Exception ex)
             {
                 return BadRequest(ex.Message);
             }

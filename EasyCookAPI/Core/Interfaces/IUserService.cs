@@ -9,5 +9,6 @@ namespace EasyCookAPI.Core.Interfaces
         public int GetId(string username);
         LogedUserDTO? Login(UserLoginDTO loginDTO);
         void NewUser(NewUserDTO newUser);
+        void UpdatePass(UpdateUserPassDTO update);
     }
 }

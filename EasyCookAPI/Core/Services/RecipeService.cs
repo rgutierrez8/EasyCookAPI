@@ -17,13 +17,13 @@ namespace EasyCookAPI.Core.Services
             _favService = favService;
         }
 
-        public RecipeDTO newRecipe(NewRecipeDTO recipe)
+        public RecipeDTO newRecipe(NewRecipeDTO recipe, int userId)
         {
-            var NewRecipe = _mapper.MapNewRecipeToRecipe(recipe);
+            var NewRecipe = _mapper.MapNewRecipeToRecipe(recipe, userId);
             Create(NewRecipe);
             Save();
 
-            var data = GetByTitle(recipe.Title);
+            var data = GetByTitle(recipe.Title, userId);
 
             _mapper.MapNewIngredientsDTOToIngredients(recipe.Ingredients, data.Id);
             data.ListIngredients = recipe.Ingredients;
@@ -34,15 +34,17 @@ namespace EasyCookAPI.Core.Services
             return data;
         }
 
-        public void DeleteRecipe(int id)
+        public bool DeleteRecipe(int id, int userId)
         {
-            var data = FindByCondition(source => source.Id == id).FirstOrDefault();
+            var data = FindByCondition(source => source.Id == id && source.UserId == userId).FirstOrDefault();
 
-            if(data != null && data.UserId == 6) // HARDCODEADO EL USUARIO QUE ELIMINA LA RECETA DEBE SER EL QUE LA CREO (LOGEADO)
+            if(data != null)
             {
                 Delete(data);
                 Save();
+                return true;
             }
+            return false;
         }
 
         public List<RecipesListDTO> GetAll(int order)
@@ -57,20 +59,20 @@ namespace EasyCookAPI.Core.Services
             return _mapper.MapListRecipeToListRecipeDTO(data);
         }
 
-        public RecipeDTO GetRecipe(int id)
+        public RecipeDTO GetRecipe(int id, int userId)
         {
             var data = FindByCondition(source => source.Id == id).Include(u => u.User).FirstOrDefault();
 
-            return _mapper.MapRecipeToRecipeDTO(data) ;
+            return _mapper.MapRecipeToRecipeDTO(data, userId) ;
         }
 
-        public RecipeDTO GetByTitle(string title)
+        public RecipeDTO GetByTitle(string title, int userId)
         {
             var data = FindByCondition(source => source.Title.ToLower() == title.ToLower()).Include(u => u.User).FirstOrDefault();
 
             if(data != null)
             {
-                return _mapper.MapRecipeToRecipeDTO(data);
+                return _mapper.MapRecipeToRecipeDTO(data, userId);
             }
 
             return null;

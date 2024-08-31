@@ -14,9 +14,9 @@ namespace EasyCookAPI.Core.Helpers
         #endregion
 
         #region RECIPE IMAPPER
-        Recipe MapNewRecipeToRecipe(NewRecipeDTO newRecipeDTO);
+        Recipe MapNewRecipeToRecipe(NewRecipeDTO newRecipeDTO, int userId);
         List<RecipesListDTO> MapListRecipeToListRecipeDTO(List<Recipe> recipes);
-        RecipeDTO MapRecipeToRecipeDTO(Recipe recipe);
+        RecipeDTO MapRecipeToRecipeDTO(Recipe recipe, int userId);
 
         #endregion
 
@@ -56,13 +56,15 @@ namespace EasyCookAPI.Core.Helpers
         private readonly IStepService _stepService;
         private readonly ICommentService _commentService;
         private readonly IFavService _favService;
+        private readonly IHelper _helper;
 
-        public Mapper(IIngredientService ingredientService, IStepService stepService, ICommentService commentService, IFavService favService) 
+        public Mapper(IIngredientService ingredientService, IStepService stepService, ICommentService commentService, IFavService favService, IHelper helper) 
         {
             _ingredientService = ingredientService;
             _stepService = stepService;
             _commentService = commentService;
             _favService = favService;
+            _helper = helper;
         }
 
         #region USER MAPPER
@@ -93,6 +95,7 @@ namespace EasyCookAPI.Core.Helpers
                 LastName = user.LastName,
                 Email = user.Email,
                 Username = user.Username,
+                Token = _helper.GenerarToken(user)
             };
             return userDTO;
         }
@@ -105,7 +108,7 @@ namespace EasyCookAPI.Core.Helpers
                 LastName = newUser.LastName,
                 Email = newUser.Email,
                 Username = newUser.Username,
-                Pass = newUser.Pass,
+                Pass = _helper.EncryptPassSha25(newUser.Pass),
                 Banner = newUser.Banner,
                 Pic = newUser.Pic
             };
@@ -138,7 +141,7 @@ namespace EasyCookAPI.Core.Helpers
             return recipesListDTOs;
         }
 
-        public RecipeDTO MapRecipeToRecipeDTO(Recipe recipe)
+        public RecipeDTO MapRecipeToRecipeDTO(Recipe recipe, int userId)
         {
             RecipeDTO recipeDTO = new RecipeDTO()
             {
@@ -156,13 +159,13 @@ namespace EasyCookAPI.Core.Helpers
                 Likes = recipe.Likes,
                 dontLike = recipe.DontLike,
                 CommentList = MapCommentsToListCommentDTO(_commentService.GetComments(recipe.Id)),
-                InFav = _favService.InFavs(recipe.Id, 6), // <-- HARDOCDEADO EL 6 HASTA TENER EL USUARIO LOGEADO
+                InFav = _favService.InFavs(recipe.Id, userId), 
             };
 
             return recipeDTO;
         }
 
-        public Recipe MapNewRecipeToRecipe(NewRecipeDTO newRecipeDTO)
+        public Recipe MapNewRecipeToRecipe(NewRecipeDTO newRecipeDTO, int userId)
         {
             Recipe recipe = new Recipe()
             {
@@ -173,7 +176,7 @@ namespace EasyCookAPI.Core.Helpers
                 Img2 = newRecipeDTO.Img2,
                 Img3 = newRecipeDTO.Img3,
                 Img4 = newRecipeDTO.Img4,
-                UserId = 6, // <-- HARDCODEADA HASTA TENER EL USER LOGEADO 
+                UserId = userId,
                 Likes = 0,
                 DontLike = 0,
             };
@@ -284,7 +287,7 @@ namespace EasyCookAPI.Core.Helpers
             Comment commentDTO = new Comment()
             {
                 RecipeId = newCommentDTO.RecipeId,
-                UserId = newCommentDTO.UserId, // <-- HARDOCDEADO HASTA TENER EL USUARIO LOGEADO
+                UserId = newCommentDTO.UserId,
                 DatePublish = dateTime.ToString("dd/MM/yyyy"),
                 Describe = newCommentDTO.Describe
             };

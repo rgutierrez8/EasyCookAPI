@@ -11,11 +11,13 @@ namespace EasyCookAPI.Core.Services
     public class UserService : Repository<User>, IUserService
     {
         private IMapper _mapper;
+        private readonly IHelper _helper;
         private readonly IRecipeService _recipeService;
-        public UserService(EasyCookContext context, IMapper mapper, IRecipeService recipeService) : base(context)
+        public UserService(EasyCookContext context, IMapper mapper, IRecipeService recipeService, IHelper helper) : base(context)
         {
             _mapper = mapper;
             _recipeService = recipeService;
+            _helper = helper;
         }
 
         public UserDTO? GetUser(int id)
@@ -39,7 +41,7 @@ namespace EasyCookAPI.Core.Services
         }
         public LogedUserDTO? Login(UserLoginDTO loginDTO)
         {
-            var data = FindByCondition(source => source.Username == loginDTO.Username && source.Pass == loginDTO.Password).FirstOrDefault();
+            var data = FindByCondition(source => source.Username == loginDTO.Username && source.Pass == _helper.EncryptPassSha25(loginDTO.Password)).FirstOrDefault();
 
             if (data != null)
             {
@@ -47,6 +49,17 @@ namespace EasyCookAPI.Core.Services
             }
 
             return null;
+        }
+        public void UpdatePass(UpdateUserPassDTO update)
+        {
+            var data = FindByCondition(source => source.Username == update.UserName && source.Email == update.Email).FirstOrDefault();
+
+            if(data != null)
+            {
+                data.Pass = _helper.EncryptPassSha25(update.Password);
+                Update(data);
+                Save();
+            }
         }
     }
 }

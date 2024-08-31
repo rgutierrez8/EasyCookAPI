@@ -23,5 +23,17 @@ namespace EasyCookAPI.Core.Services
             Create(newComment);
             Save();
         }
+        public bool DeleteComment(DeleteCommentDTO comment)
+        {
+            var data = FindByCondition(source => source.Id == comment.Id && source.RecipeId == comment.RecipeId && source.UserId == comment.UserId).FirstOrDefault();
+
+            if (data != null)
+            {
+                Delete(data);
+                Save();
+                return true;
+            }
+            return false;
+        }
     }
 }
