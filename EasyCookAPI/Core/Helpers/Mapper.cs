@@ -154,7 +154,7 @@ namespace EasyCookAPI.Core.Helpers
                 Img2 = recipe.Img2,
                 Img3 = recipe.Img3,
                 Img4 = recipe.Img4,
-                NeededTime = recipe.NeededTime,
+                NeededTime = recipe.NeededTime + " min",
                 Username = recipe.User.Username,
                 Likes = recipe.Likes,
                 dontLike = recipe.DontLike,

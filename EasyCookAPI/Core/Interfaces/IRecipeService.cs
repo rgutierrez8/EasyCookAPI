@@ -12,5 +12,6 @@ namespace EasyCookAPI.Core.Interfaces
         RecipeDTO newRecipe(NewRecipeDTO recipe, int userId);
         RecipeDTO GetByTitle(string title, int userId);
         bool DeleteRecipe(int id, int userId);
+        List<RecipeDTO> GetAllFullRecipe(int userId);
     }
 }

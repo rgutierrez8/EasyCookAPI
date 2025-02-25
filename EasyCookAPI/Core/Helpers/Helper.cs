@@ -2,6 +2,7 @@
 using EasyCookAPI.Models;
 using EasyCookAPI.Models.DTO;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -15,6 +16,7 @@ namespace EasyCookAPI.Core.Helpers
         string GetToken();
         int DecodeJwt(string token);
         string EncryptPassSha25(string password);
+        Task<string> UploadImg(string img);
     }
 
     public class Helper : IHelper
@@ -87,6 +89,28 @@ namespace EasyCookAPI.Core.Helpers
             for (int i = 0; i < stream.Length; i++) sb.AppendFormat("{0:x2}", stream[i]);
             
             return sb.ToString();
+        }
+        public async Task<string> UploadImg(string img)
+        {
+            using (var client = new HttpClient())
+            {
+                var content = new MultipartFormDataContent();
+                content.Add(new StringContent(img), "image");
+                var a = _configuration.GetSection("ImgBB:Api_KEY").Value;
+                var response = await client.PostAsync($"https://api.imgbb.com/1/upload?key=" + _configuration.GetSection("ImgBB:Api_KEY").Value, content);
+                var responseString = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseContent = await response.Content.ReadAsStringAsync();
+                    var JsonResult = JsonConvert.DeserializeObject<dynamic>(responseContent);
+                    return JsonResult.data.image.url.ToString();
+                }
+                else
+                {
+                    return responseString;
+                }
+            }
         }
     }
 }

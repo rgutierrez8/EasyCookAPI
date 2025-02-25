@@ -10,5 +10,6 @@ namespace EasyCookAPI.Core.Interfaces
         LogedUserDTO? Login(UserLoginDTO loginDTO);
         void NewUser(NewUserDTO newUser);
         void UpdatePass(UpdateUserPassDTO update);
+        bool UserExist(string email, string username);
     }
 }

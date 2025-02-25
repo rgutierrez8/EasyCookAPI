@@ -1,19 +1,42 @@
-﻿using EasyCookAPI.Core.Interfaces;
+﻿using EasyCookAPI.Core.Helpers;
+using EasyCookAPI.Core.Interfaces;
+using EasyCookAPI.Models;
 using EasyCookAPI.Models.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EasyCookAPI.Controllers
 {
+    [Authorize]
     [Route("/User")]
     [ApiController]
     [Controller]
     public class UserController : Controller
     {
         private readonly IUserService _userService;
-        public UserController(IUserService userService) 
+        private readonly IHelper _helper;
+        public UserController(IUserService userService, IHelper helper) 
         {
             _userService = userService;
+            _helper = helper;
+        }
+
+        [HttpGet("Logged")]
+        public IActionResult GetUserData()
+        {
+            try
+            {
+                var userId = _helper.DecodeJwt(_helper.GetToken());
+                if (_userService.GetUser(userId) != null)
+                {
+                    return Ok(_userService.GetUser(userId));
+                }
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpGet("Id/{id}")]
@@ -53,12 +76,24 @@ namespace EasyCookAPI.Controllers
 
         [AllowAnonymous]
         [HttpPost("New")]
-        public IActionResult NewUser(NewUserDTO user)
+        public async Task<IActionResult> NewUser(NewUserDTO user)
         {
             try
             {
-                _userService.NewUser(user);
-                return Ok();
+                var exist = _userService.UserExist(user.Email, user.Username);
+
+                if(!exist)
+                {
+                    if(user.Banner != null)
+                        user.Banner = await _helper.UploadImg(user.Banner);
+                    if(user.Pic != null)
+                        user.Pic = await _helper.UploadImg(user.Pic);
+
+                    _userService.NewUser(user);
+                    return Ok();
+                }
+
+                return Forbid("El usuario o email ya está registrado!");
             }
             catch (Exception ex)
             {

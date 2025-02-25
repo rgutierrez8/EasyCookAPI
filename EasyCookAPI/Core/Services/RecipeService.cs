@@ -49,6 +49,7 @@ namespace EasyCookAPI.Core.Services
 
         public List<RecipesListDTO> GetAll(int order)
         {
+            //var data = GetAll(source => source.Include(r => r.User)).Take(10).ToList();
             var data = GetAll(source => source.Include(r => r.User)).ToList();
 
             if (order == 1) { data = GetAll(source => source.Include(r => r.User)).OrderByDescending(source => source.Likes).ToList(); } // ORDEN DE MAS A MENOS LIKES
@@ -101,6 +102,23 @@ namespace EasyCookAPI.Core.Services
             }
 
             return _mapper.MapListRecipeToListRecipeDTO(list);
+        }
+        public List<RecipeDTO> GetAllFullRecipe(int userId)
+        {
+            List<RecipeDTO> list = new List<RecipeDTO>();
+            var favs = _favService.GetFavs(userId);
+
+            foreach (var fav in favs)
+            {
+                var data = FindByCondition(source => source.Id == fav.RecipeId).Include(u => u.User).FirstOrDefault();
+
+                if (data != null)
+                {
+                    list.Add(_mapper.MapRecipeToRecipeDTO(data, userId));
+                }
+            }
+
+            return list;
         }
     }
 }

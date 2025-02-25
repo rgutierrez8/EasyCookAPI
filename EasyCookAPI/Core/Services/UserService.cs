@@ -61,5 +61,14 @@ namespace EasyCookAPI.Core.Services
                 Save();
             }
         }
+        public bool UserExist(string email, string username)
+        {
+            var data = FindByCondition(source => source.Email == email || source.Username == username).FirstOrDefault();
+            if (data != null)
+            {
+                return true;
+            }
+            return false;
+        }
     }
 }
